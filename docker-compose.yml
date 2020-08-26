@@ -1,0 +1,62 @@
+version: "3" #Aparentemente a imagem do TomCat já está inserida aqui
+services:
+  db: #Banco de Produção
+    container_name: pg-prod
+    image: postgres:9.6
+    networks:
+      - prod_net_back #O banco do backend só é conectado com ele mesmo
+    environment: #2 Variáveis de ambiente 
+      - POSTGRES_PASSWORD=passwd 
+      - POSTGRES_DB=tasks #nome da database criada
+    volumes: # < MAPEAMENTO DE VOLUMES, para não perder os dados
+      - prod_postgresql:/var/lib/postgresql
+      - prod_postgresql_data:/var/lib/postgresql/data
+
+  backend:
+    container_name: backend-prod
+    image: back_prod:build_${BUILD_NUMBER}
+    build: #Configuração de construção
+      context: .
+      args:
+        - WAR_FILE=target/tasks-backend.war
+        - CONTEXT=tasks-backend
+    networks:
+      - prod_net_back #Backend tem conexão com o banco e com o banco do front
+      - prod_net_front
+    #ports: Pode ser ativado caso tenha a necessidade de se conectar diretamente com o banco do backend de produção
+    #  - 9998:8080
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWD=passwd
+      #- DATABASE_UPDATE=none
+    depends_on: #Depende que o backend esteja no ar
+      - db
+
+  frontend:
+    container_name: frontend-prod
+    image: front_prod:build_${BUILD_NUMBER} #cria a imagem e versiona a versão da mesma (BUILD_NUMBER é uma variável própria do ambiente do Jenkins, para não sobrepor o banco do front)
+    build: #BUILD_NUMBER é o número do build do jenkins "#X"
+        context: .
+        args:
+          - WAR_FILE=frontend/target/tasks.war
+          - CONTEXT=tasks
+    networks:
+      - prod_net_front #O banco do frontend só se conecta com ele mesmo
+    ports:
+      - 9999:8080 #porta exposta / porta oculta.. A porta oculta não tem problema repitir, ela funciona como se cada imagem fosse um computador único
+    environment:
+      - BACKEND_HOST=backend
+      - BACKEND_PORT=8080 #acesso só é interno 
+      - APP_VERSION=build_${BUILD_NUMBER}
+    #depends_on:
+    #  - backend
+
+networks: #Rede para o Front e para o Back
+  prod_net_front:
+  prod_net_back:
+
+volumes: #guarda os dados
+  prod_postgresql:
+  prod_postgresql_data:
