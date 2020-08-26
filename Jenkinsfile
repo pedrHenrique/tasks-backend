@@ -1,5 +1,5 @@
-pipeline {
-    agent any
+pipeline { //Ao inves de escrevermos um Pipeline script diretamente no Jenkins. Nós construímos um
+    agent any //Jenkins File que irá conter o Pipeline script específico para cada caso.
     stages {
         stage ('Build Backend') {
             steps {
@@ -34,13 +34,23 @@ pipeline {
                 deploy adapters: [tomcat8(credentialsId: 'TomCatLogin', path: '', url: 'http://localhost:8001')], contextPath: 'tasks-backend', war: 'target\\tasks-backend.war'
             }
         }
-        stage ('API Tests') {
+        stage ('API Tests') { //Fazendo os Testes da API
             steps {
-                dir('api-test'){ 
-                git credentialsId: 'github_login', url: 'https://github.com/pedrHenrique/tasks-api-test'
-                bat 'mvn test'
+                dir('api-test'){ //aparentemente cria um diretório com esse nome
+                git credentialsId: 'github_login', url: 'https://github.com/pedrHenrique/tasks-api-test' //baixa o conteúdo desse repositório
+                bat 'mvn test' //como ele só possui testes com a API REST, executa os mesmos
+                }
+            }
+        }
+        stage ('Deploy Frontend') {
+            steps {
+                dir('frontend') {
+                    git credentialsId: 'github_login', url: 'https://github.com/pedrHenrique/tasks-frontend' 
+                    bat 'mvn clean package'
+                    deploy adapters: [tomcat8(credentialsId: 'TomCatLogin', path: '', url: 'http://localhost:8001')], contextPath: 'tasks', war: 'target\\tasks.war'
                 }
             }
         }
     }
 }
+
