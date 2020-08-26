@@ -51,6 +51,14 @@ pipeline { //Ao inves de escrevermos um Pipeline script diretamente no Jenkins. 
                 }
             }
         }
+        stage ('functional Tests') { //Fazendo os Testes da API
+            steps {
+                dir('functional-test'){ //aparentemente cria um diretório com esse nome
+                    git credentialsId: 'github_login', url: 'https://github.com/pedrHenrique/tasks-fuctional-test' //baixa o conteúdo desse repositório
+                    bat 'mvn test' //como ele só possui testes com a API REST, executa os mesmos
+                }
+            }
+        }
     }
 }
 
