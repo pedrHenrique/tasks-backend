@@ -59,6 +59,12 @@ pipeline { //Ao inves de escrevermos um Pipeline script diretamente no Jenkins. 
                 }
             }
         }
+        stage ('Deploy Prod') {
+            steps {
+                bat 'docker-compose build'
+                bat 'docker-compose up'
+            }
+        }
     }
 }
 
