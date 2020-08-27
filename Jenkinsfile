@@ -62,7 +62,7 @@ pipeline { //Ao inves de escrevermos um Pipeline script diretamente no Jenkins. 
         stage ('Deploy Prod') {
             steps {
                 bat 'docker-compose build'
-                bat 'docker-compose up'
+                bat 'docker-compose up -d' //-d é importantíssimo.. Sem ele o jenkins não conseguiria assumir o terminal
             }
         }
     }
