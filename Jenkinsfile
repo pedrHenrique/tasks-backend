@@ -65,6 +65,14 @@ pipeline { //Ao inves de escrevermos um Pipeline script diretamente no Jenkins. 
                 bat 'docker-compose up -d' //-d é importantíssimo.. Sem ele o jenkins não conseguiria assumir o terminal
             }
         }
+        stage ('Health Check') { //Healtch Check é muito mais complexo doq está sendo utilziado aqui, 
+            steps { //porém o aquino gosta desse nome então decidiu fazer esse tipo de teste. Para garantir que produção esteje rodando 100%
+                sleep(45)
+                dir('functional-test'){ 
+                    bat 'mvn verify -Dskip.surefire.tests' 
+                }
+            }
+        }
     }
 }
 
